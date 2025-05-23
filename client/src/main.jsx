@@ -9,11 +9,23 @@ import {
 } from "react-router";
 import MainDashboard from './components/MainDashboard.jsx';
 import AuthPage from './routes/Auth/AuthPage.jsx';
+import ErrorPage from './components/ErrorPage.jsx';
+import {
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query'
+  import { ToastContainer } from 'react-toastify';
+
+const queryClient = new QueryClient();
+
+
+
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
+    errorElement: <ErrorPage />,
     children: [
       {
         index: true,
@@ -35,7 +47,12 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-     <RouterProvider router={router} />
+
+    <QueryClientProvider client={queryClient}>
+        <ToastContainer autoClose={2000} pauseOnHover={false}
+ />
+       <RouterProvider router={router} />
+    </QueryClientProvider>
   </StrictMode>
 )
 
