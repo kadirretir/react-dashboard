@@ -1,8 +1,13 @@
 import { useMutation } from "@tanstack/react-query";
+import {useAuth} from '../../components/AuthContext.jsx'
 import axios from "axios";
+import { toast } from "react-toastify";
 
 
 const Login = ({switchPages}) => {
+
+  const { setToken, token } = useAuth()
+
 
   const mutation = useMutation({
     queryKey: ["login"],
@@ -36,7 +41,7 @@ const Login = ({switchPages}) => {
 
     onError: (err) => {
       console.log(err);
-      // toast.error(err.response.data.message)
+       toast.error(err.response.data.message)
     },
   });
 
@@ -60,7 +65,7 @@ const Login = ({switchPages}) => {
         switchPages("register")
     }
     
-  return (
+  return  (
     <div className="flex  min-h-full h-full flex-1 content-center flex-col justify-center px-6 py-12 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
           <img

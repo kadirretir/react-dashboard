@@ -4,8 +4,10 @@ import Register from "./Register";
 
 
 
+
 const AuthPage = () => {
   const [switchPages, setSwitchPages] = useState("login");
+
 
 
   return (

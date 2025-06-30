@@ -7,7 +7,7 @@ import {
   RouterProvider,
   Navigate 
 } from "react-router";
-import MainDashboard from './components/MainDashboard.jsx';
+import Dashboard from './components/Dashboard.jsx';
 import AuthPage from './routes/Auth/AuthPage.jsx';
 import ErrorPage from './components/ErrorPage.jsx';
 import {
@@ -15,12 +15,26 @@ import {
   QueryClientProvider,
 } from '@tanstack/react-query'
   import { ToastContainer } from 'react-toastify';
+import { AuthProvider, useAuth } from './components/AuthContext';
+import DashboardMain from './components/DashboardMain.jsx';
+import DashboardRaports from './components/DashboardRaports.jsx';
+
 
 const queryClient = new QueryClient();
 
 
 
+const AppRoutes = () => {
 
+const {token, isLoading} = useAuth();
+
+  if (isLoading) {
+    return <div className='animate-spin'>Loading...</div>;
+  }
+
+
+
+// Components rendered conditionally based on the token is exist or not (user logged in or not)
 const router = createBrowserRouter([
   {
     path: "/",
@@ -29,29 +43,42 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Navigate to="/login" />
+        element: token ? <Navigate to="/dashboard" /> : <Navigate to="/login" />,
       },
       {
-        path: "login",
-        element: <AuthPage />
+        path: "/login",
+        element: token ? <Navigate to="/dashboard" /> : <AuthPage />
       },
       {
         path: "dashboard",
-        element: <MainDashboard />
+        element: token ? <Dashboard /> : <Navigate to="/login" />,
+            children: [
+          {
+            index: true,
+            element: <Navigate to="/dashboard/main" />
+          },
+           {
+            path: "main",
+            element: <DashboardMain />
+          },
+           {
+            path: "raports",
+            element: <DashboardRaports />
+          }
+        ]
       }
     ]
   },
 ]);
-
-
-
+  return <RouterProvider router={router} />;
+}
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-
     <QueryClientProvider client={queryClient}>
-        <ToastContainer autoClose={2000} pauseOnHover={false}
- />
-       <RouterProvider router={router} />
+           <AuthProvider>
+              <ToastContainer autoClose={2000} pauseOnHover={false}/>
+                <AppRoutes />
+            </AuthProvider>
     </QueryClientProvider>
   </StrictMode>
 )

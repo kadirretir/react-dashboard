@@ -1,8 +1,8 @@
 import User from "../models/user.model.js";
 import bcrypt from "bcrypt";
-import {generateAccessToken} from "../utils/jwt.js"; // az önce yazdığımız fonksiyon
+import {generateAccessToken} from "../utils/jwt.js";
 
-export const register = async (req, res) => {
+export const post_register = async (req, res) => {
   const { username, email, password } = req.body;
 
   if (!username || !email || !password) {
@@ -33,7 +33,7 @@ export const register = async (req, res) => {
   res.status(201).json({ message: "The user sign up has been successful." });
 };
 
-export const login = async (req, res) => {
+export const post_login = async (req, res) => {
   const { email, password } = req.body;
   const checkUser = await User.findOne({ email: email });
 
@@ -56,18 +56,50 @@ export const login = async (req, res) => {
 
   const token = await generateAccessToken(payload);
 
-  res
-    .status(200)
-    .json({ message: "Login authentication is successfull!", token });
+  res.status(200).json({ message: "Login authentication is successfull!", token });
 };
 
-const verify = async (req,res,next) => {
+export const get_login = async (req, res) => {
     const authHeader = req.headers.authorization;
-
     if(authHeader) {
         const token = authHeader.split(" ")[1];
-    } else {
-        res.status(401).json({message: "Unauthorized"})
-    }
 
+        verifyToken(token, (err,user) => {
+          if(err) return res.status(401).json({message: "Unauthorized"});
+
+          console.log(user)
+
+          res.status(201).json({user})
+        })
+
+
+    } else {
+        res.status(401).json({message: "Unauthorized"});
+    }
 }
+
+export const get_token = async (req, res) => {
+  res.json({message: "hello"})
+}
+
+
+
+
+
+// const verify = async (req,res,next) => {
+//     const authHeader = req.headers.authorization;
+
+//     if(authHeader) {
+//         const token = authHeader.split(" ")[1];
+
+//         jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET), (err, user) => {
+//           if(err) return res.status(401).json({message: "Unauthorized"});
+//           console.log(user);
+//           req.user = user;
+//           next();
+//         })
+
+//     } else {
+//         res.status(401).json({message: "Unauthorized"});
+//     }
+// }
