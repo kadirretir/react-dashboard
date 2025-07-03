@@ -29,7 +29,7 @@ const AppRoutes = () => {
 const {token, isLoading} = useAuth();
 
   if (isLoading) {
-    return <div className='animate-spin'>Loading...</div>;
+    return <div className=''>Loading...</div>;
   }
 
 

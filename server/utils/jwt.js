@@ -25,10 +25,12 @@ export async function generateRefreshToken(payload) {
     .sign(secretRefresh);
 }
 
-export async function verifyToken (token, options = undefined) {
+export async function verifyToken (token, { type = "access", returnPayload = false } = {}) {
   try {
-    const verification = await jwtVerify(token, secret);
-    return options?.returnPayload ? verification.payload : true;
+    const selectedSecret = type === "access" ? secret : secretRefresh;
+
+    const verification = await jwtVerify(token, selectedSecret);
+      return returnPayload ? verification.payload : true;
   } catch {
     return false;
   }

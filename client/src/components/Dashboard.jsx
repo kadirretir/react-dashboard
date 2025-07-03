@@ -1,9 +1,23 @@
 import {Link, Outlet} from 'react-router'
 import { Menu, MenuButton, MenuItem, MenuItems, MenuHeading } from '@headlessui/react'
 import { ChevronDownIcon } from '@heroicons/react/20/solid'
+import axios from 'axios'
 
 
 const Dashboard = () => {
+
+  const handleLogout = async (e) => {
+e.preventDefault()
+    console.log("çalıştı")
+    try {
+await axios.post(`${import.meta.env.VITE_API_URL}/auth/logout`, null, { withCredentials: true });
+window.location.href = "/login";
+
+    } 
+    catch (error) {
+      console.error(error)
+    }
+  }
   return (
      <div className='flex justify-between h-screen bg-gray-100'>
    
@@ -16,13 +30,13 @@ const Dashboard = () => {
          <nav className=''>
           <ul className='p-0 flex flex-col gap-2 text-center'>
        
-           <Link to="main"><li className='py-4 bg-green-100'>Anasayfa</li></Link> 
-              <Link to="raports"><li className='py-4 bg-green-100 '>Raporlar</li></Link>
-              <li className='py-4 bg-green-100'><a href="#">Kullanıcılar</a></li>
-              <li className='py-4 bg-green-100'><a href="#">Ayarlar</a></li>
-              <li className='py-4 bg-green-100'><a href="#">Bildirimler</a></li>
-              <li className='py-4 bg-green-100'><a href="#">Yardım</a></li>
-              <li className='py-4 bg-green-100'><a href="#">Çıkış Yap</a></li>
+           <Link to="main"><li className='py-4 bg-green-100'>Home</li></Link> 
+              <Link to="raports"><li className='py-4 bg-green-100 '>Raports</li></Link>
+              <li className='py-4 bg-green-100'><a href="#">Users</a></li>
+              <li className='py-4 bg-green-100'><a href="#">Settings</a></li>
+              <li className='py-4 bg-green-100'><a href="#">Notifications</a></li>
+              <li className='py-4 bg-green-100'><a href="#">Help</a></li>
+              <li className='py-4 bg-green-100'><a href="#" onClick={handleLogout}>Sign Out</a></li>
 
           </ul>
          </nav>
@@ -69,7 +83,7 @@ const Dashboard = () => {
               License
             </a>
           </MenuItem>
-          <form action="#" method="POST">
+          <form onSubmit={handleLogout} method="POST">
             <MenuItem>
               <button
                 type="submit"

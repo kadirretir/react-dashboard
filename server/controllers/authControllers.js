@@ -1,6 +1,6 @@
 import User from "../models/user.model.js";
 import bcrypt from "bcrypt";
-import {generateAccessToken} from "../utils/jwt.js";
+import {generateAccessToken, generateRefreshToken, verifyToken} from "../utils/jwt.js";
 
 export const post_register = async (req, res) => {
   const { username, email, password } = req.body;
@@ -33,12 +33,13 @@ export const post_register = async (req, res) => {
   res.status(201).json({ message: "The user sign up has been successful." });
 };
 
+
 export const post_login = async (req, res) => {
   const { email, password } = req.body;
   const checkUser = await User.findOne({ email: email });
 
   if (!checkUser) {
-    return res.status(401).json({ message: "User not found!" });
+    return res.status(401).json({ message: "Invalid credentials!" });
   }
 
  const isPasswordCorrect = await bcrypt.compare(password, checkUser.password);
@@ -54,9 +55,22 @@ export const post_login = async (req, res) => {
     role: "user",
   };
 
-  const token = await generateAccessToken(payload);
+  const accessToken = await generateAccessToken(payload);
+  const refreshToken = await generateRefreshToken(payload);
 
-  res.status(200).json({ message: "Login authentication is successfull!", token });
+    res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: false, // PROD: HTTPS zorunlu
+    sameSite: "Lax",
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+
+  res.status(200).json({ message: "Login authentication is successfull!", accessToken, 
+    user: {
+      id: checkUser._id,
+      username: checkUser.username,
+      email: checkUser.email,}
+     });
 };
 
 export const get_login = async (req, res) => {
@@ -79,7 +93,31 @@ export const get_login = async (req, res) => {
 }
 
 export const get_token = async (req, res) => {
-  res.json({message: "hello"})
+   const { refreshToken } = req.cookies;
+
+  if (!refreshToken) {
+    return res.status(401).json({ message: "No refresh token provided" });
+  }
+
+  try {
+    const decoded = await verifyToken(refreshToken, { type: "refresh" });
+    const payload = {
+      sub: decoded.sub,
+      username: decoded.username,
+      role: decoded.role,
+    };
+
+    const newAccessToken = await generateAccessToken(payload);
+
+    res.json({ accessToken: newAccessToken });
+  } catch (err) {
+    return res.status(403).json({ message: "Invalid refresh token" });
+  }
+}
+
+export const logout = (req,res) => {
+  res.clearCookie("refreshToken");
+  res.sendStatus(204);
 }
 
 

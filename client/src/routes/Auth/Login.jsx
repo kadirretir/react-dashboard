@@ -1,12 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
-import {useAuth} from '../../components/AuthContext.jsx'
 import axios from "axios";
 import { toast } from "react-toastify";
 
 
 const Login = ({switchPages}) => {
-
-  const { setToken, token } = useAuth()
 
 
   const mutation = useMutation({
@@ -14,14 +11,14 @@ const Login = ({switchPages}) => {
     mutationFn: async (data) => {
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/auth/login`,
-        data
+        data, {withCredentials: true}
       );
-
       return res.data;
     },
 
     onSuccess: (res) => {
       console.log(res)
+      window.location.href = "/dashboard"
       // setIsBusy(true);
       // toast.success(
       //   <div>
@@ -40,7 +37,7 @@ const Login = ({switchPages}) => {
     },
 
     onError: (err) => {
-      console.log(err);
+      console.log(err.response.data.message);
        toast.error(err.response.data.message)
     },
   });

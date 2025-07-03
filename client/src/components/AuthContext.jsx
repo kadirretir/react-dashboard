@@ -3,7 +3,6 @@ import {
   createContext,
   useContext,
   useEffect,
-  useLayoutEffect,
   useState,
 } from "react";
 
@@ -24,11 +23,11 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         const fetchMe = async () => {
-            try {
-                 const response = await axios.get(`${import.meta.env.VITE_API_URL}/auth/login`);
-             
-                setToken(response.data.accessToken)
+            try {      
+               const response = await axios.get(`${import.meta.env.VITE_API_URL}/auth/token`, { withCredentials: true });
+               setToken(response.data.accessToken);
             } catch {
+          
                 setToken(null)
             } finally {
               setIsLoading(false);
@@ -38,46 +37,46 @@ export const AuthProvider = ({ children }) => {
    
     }, [])
 
-    useLayoutEffect(() => {
-        const authInterceptor = axios.interceptors.request.use((config) => {
-            config.headers.Authorization = 
-            !config._retry && token ? `Bearer ${token}` : config.headers.Authorization;
-            return config;
-        });
+ useEffect(() => {
+  const interceptor = axios.interceptors.request.use(config => {
+    if (token && !config.headers.Authorization) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  });
+  return () => axios.interceptors.request.eject(interceptor);
+}, [token]);
 
-        return () => {
-            axios.interceptors.request.eject(authInterceptor)
+
+
+  useEffect(() => {
+  const interceptor = axios.interceptors.response.use(
+    res => res,
+    async (error) => {
+      const originalRequest = error.config;
+      if (
+        error.response?.status === 401 &&
+        !originalRequest._retry &&
+        error.response.data.message === 'Unauthorized'
+      ) {
+        originalRequest._retry = true;
+        try {
+          const response = await axios.get(`${import.meta.env.VITE_API_URL}/auth/token`, { withCredentials: true });
+          setToken(response.data.accessToken);
+          originalRequest.headers.Authorization = `Bearer ${response.data.accessToken}`;
+          return axios(originalRequest);
+        } catch (err) {
+          setToken(null);
+          return Promise.reject(err);
         }
-
-    },[token])
-
-    useLayoutEffect(() => {
-     const refreshInterceptor = axios.interceptors.response.use(
-      (response) => response,
-      async (error) => {
-        const originalRequest = error.config;
-
-        if(error.response.status === 401 && error.response.data.message === 'Unauthorized') {
-          try {
-            const response = await axios.get(`${import.meta.env.VITE_API_URL}/token`)
-
-            setToken(response.data.accessToken)
-
-            originalRequest.headers.Authorization = `Bearer ${response.data.accessToken}`
-            originalRequest._retry = true;
-
-            return axios(originalRequest)
-          } catch {
-            setToken(null)
-          }
-return Promise.reject(error)
-          }
-
-        })
-       return () => {
-        axios.interceptors.response.eject(refreshInterceptor)
-       }
-    }, [])
+      }
+      return Promise.reject(error);
+    }
+  );
+  return () => {
+    axios.interceptors.response.eject(interceptor);
+  };
+}, []);
 
 
       return (
